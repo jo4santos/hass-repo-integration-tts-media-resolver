@@ -1,0 +1,16 @@
+resolve_media:
+  name: Resolve media
+  description: >-
+    Resolve a media-source:// reference (e.g. the identifier produced by a
+    tts.speak call) into a real, absolute, directly-playable URL. Returns
+    {url, mime_type} as a service response.
+  fields:
+    media_content_id:
+      name: Media content ID
+      description: >-
+        The media-source:// URI to resolve (typically the output of a
+        tts.speak call's service response).
+      required: true
+      example: "media-source://tts/tts.cloud?message=Ol%C3%A1"
+      selector:
+        text:

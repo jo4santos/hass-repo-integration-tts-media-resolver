@@ -1,0 +1,12 @@
+{
+  "domain": "tts_media_resolver",
+  "name": "TTS Media Resolver",
+  "codeowners": ["@jo4santos"],
+  "config_flow": false,
+  "documentation": "https://github.com/jo4santos/hass-repo-integration-tts-media-resolver",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "version": "1.0.0",
+  "dependencies": [],
+  "requirements": []
+}
