@@ -5,9 +5,10 @@ Exposes a single service, ``tts_media_resolver.resolve_media``, that turns a
 produces) into a real, absolute, directly-playable URL.
 
 This uses Home Assistant's own media-source resolution machinery
-(``homeassistant.components.media_source``) plus its own URL helper
-(``homeassistant.helpers.network.get_url``) — no external credentials,
-tokens, or secrets are stored or required.
+(``homeassistant.components.media_source``) plus its own helper for turning
+a resolved media-source URL into an absolute, correctly-signed playable URL
+(``homeassistant.components.media_player.async_process_play_media_url``) —
+no external credentials, tokens, or secrets are stored or required.
 """
 from __future__ import annotations
 
@@ -16,9 +17,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import media_source
+from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.network import get_url
 
 DOMAIN = "tts_media_resolver"
 SERVICE_RESOLVE_MEDIA = "resolve_media"
@@ -40,10 +41,14 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
         resolved = await media_source.async_resolve_media(hass, media_content_id, None)
 
-        url = resolved.url
-        if url.startswith("/"):
-            base_url = get_url(hass, prefer_external=False)
-            url = f"{base_url}{url}"
+        # media_source.async_resolve_media() does NOT sign protected paths
+        # (e.g. local media under /media/...) on its own -- that is a
+        # separate step every built-in media_player integration performs
+        # before handing a URL to an external player. Without it, local
+        # media-source URLs come back unsigned and any external fetcher
+        # (e.g. Music Assistant) gets a 401 Unauthorized. TTS proxy URLs
+        # are self-authenticating and pass through unchanged either way.
+        url = async_process_play_media_url(hass, resolved.url)
 
         _LOGGER.debug(
             "Resolved %s to %s (mime_type=%s)", media_content_id, url, resolved.mime_type
